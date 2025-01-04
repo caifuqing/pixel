@@ -43,10 +43,26 @@ body{
   outline:2px solid #fff;
   background-color:Transparent;
   }
+#download{
+  width:80%;
+  bottom:15%;
+  height:40px;
+  color:white;
+  border:none;
+  outline:none;
+  position:fixed;
+  font-size:20px;
+  margin-top:50px;
+  margin-left:10%;
+  border-radius:2.5px;
+  outline:2px solid #fff;
+  background-color:Transparent;
+  }
 </style>
 <input type="file" id="inputFile" style="display:none;" accept="image/*">
 <canvas id="Canvas"></canvas>
 <button id="selectFile">选取图片</button>
+<button id="download">下载图片</button>
 <script>
 //随机数
 function getRandom(min,max){return Math.floor(Math.random() *(max+1-min)+min);}
@@ -167,6 +183,21 @@ class Pixel{
      ctx.fill();
      }
   }
+download.onclick=function (){
+exportCanvasAsPNG("Canvas","pixel.png")
+}
+function exportCanvasAsPNG(id, fileName) {
+    var canvasElement = document.getElementById(id);
+    var MIME_TYPE = "image/png";
+    var imgURL = canvasElement.toDataURL(MIME_TYPE);
+    var dlLink = document.createElement('a');
+    dlLink.download = fileName;
+    dlLink.href = imgURL;
+    dlLink.dataset.downloadurl = [MIME_TYPE, dlLink.download, dlLink.href].join(':');
+    document.body.appendChild(dlLink);
+    dlLink.click();
+    document.body.removeChild(dlLink);
+}
 </script>
 </body>
 </html>
