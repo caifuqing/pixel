@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>像素画</title>
+</head>
+<body>
+<style>
+*{
+  margin:0;
+  padding:0;
+  }
+html{
+  width:100vw;
+  height:100vh;
+  background-size:cover;
+  background-color:#0066ff;
+  background-position:fixed;
+  background-position:center;
+  }
+body{
+  width:100%;
+  height:100%;
+  }
+#Canvas{
+  top:0;
+  left:0;
+  z-index:-1;
+  position:fixed;
+  }
+#selectFile{
+  width:80%;
+  bottom:25%;
+  height:40px;
+  color:white;
+  border:none;
+  outline:none;
+  position:fixed;
+  font-size:20px;
+  margin-top:50px;
+  margin-left:10%;
+  border-radius:2.5px;
+  outline:2px solid #fff;
+  background-color:Transparent;
+  }
+</style>
+<input type="file" id="inputFile" style="display:none;" accept="image/*">
+<canvas id="Canvas"></canvas>
+<button id="selectFile">选取图片</button>
+<script>
+//随机数
+function getRandom(min,max){return Math.floor(Math.random() *(max+1-min)+min);}
+function randomColor(){return `rgb(${getRandom(0,255)},${getRandom(0,255)},${getRandom(0,255)})`;}
+const ctx = Canvas.getContext('2d'),rgb="0,0,0";
+//选取图片文件
+selectFile.onclick=function (){
+  inputFile.click();
+  inputFile.onchange=function (e){
+   const file=this.files[0];if(file){
+    if(file.type.split(/[/]/)[0]==="image"){
+    const reader =new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+    const data=e.target.result;
+    const image=new Image();
+    image.src=data;
+    image.onload=function (){
+      if(this.width+this.height<=8000){
+      new Pixel(this);
+      }else{
+      alert("图片太大了，另选一张吧！");
+      }
+     }
+    }
+   }else{
+   alert("只能选取图片！！！");
+   }
+  }else{
+  //选取文件已取消
+  }
+ }
+}
+
+class Pixel{
+  constructor(img){
+    this.sparse=40;//稀疏
+    this.x=0;
+    this.y=0;
+    const canvas = document.createElement("canvas");
+    const cvs = canvas.getContext('2d',{willReadFrequently:true});
+    this.imgWidth = img.width;
+    this.imgHeight = img.height;
+    this.dpr = devicePixelRatio;
+    this.wwdpr = window.innerWidth * this.dpr;
+    this.whdpr = window.innerHeight * this.dpr;
+    canvas.width = this.imgWidth;
+    canvas.height = this.imgHeight;
+    Canvas.width = this.imgWidth * this.dpr;
+    Canvas.height = this.imgHeight * this.dpr;
+    Canvas.style.width = this.wwdpr + "px";
+    Canvas.style.height = this.imgHeight *(this.wwdpr/this.imgWidth) + "px";
+    cvs.drawImage(img,0,0);
+    this.imgData = cvs.getImageData(0,0,this.imgWidth,this.imgHeight).data;
+    if(this.imgWidth+this.imgHeight>=5000){
+      this.sparse=this.sparse>this.dpr*10?this.sparse:this.dpr*10;
+      }else{
+      this.sparse=this.sparse?this.sparse:1;
+      }
+    this.draw();
+    }
+  draw(){
+      var thickness=this.sparse/8;
+      for(let i = 0; i < this.imgData.length; i +=4*this.sparse) {
+      ctx.beginPath();
+      ctx.fillStyle = `rgba( ${this.imgData.slice(i,i+4)})`;
+      ctx.fillRect(this.x*this.sparse,this.y*this.sparse,this.sparse,this.sparse);
+      const index=(this.y*this.imgWidth+this.imgWidth)*4*this.sparse;
+      this.borderTop(thickness);
+      this.borderBottom(thickness);
+      this.borderLeft(thickness);
+      this.borderRight(thickness)
+      this.x+=1;
+        if(i==index-this.sparse*4){
+          this.x=0;
+          this.y+=1;
+        }
+      }
+    }
+   borderTop(thickness){
+     ctx.beginPath();
+     ctx.fillStyle="rgba(0,0,0,0.1)";
+     ctx.moveTo(this.x*this.sparse,this.y*this.sparse);
+     ctx.lineTo(this.x*this.sparse+thickness,this.y*this.sparse+thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse-thickness,this.y*this.sparse+thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse,this.y*this.sparse);
+     ctx.closePath();
+     ctx.fill();
+     }
+   borderBottom(thickness){
+     ctx.beginPath();  
+     ctx.fillStyle="rgba(0,0,0,0.5)";
+     ctx.moveTo(this.x*this.sparse,this.y*this.sparse+this.sparse);
+     ctx.lineTo(this.x*this.sparse+thickness,this.y*this.sparse+this.sparse-thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse-thickness,this.y*this.sparse+this.sparse-thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse,this.y*this.sparse+this.sparse);
+     ctx.closePath();
+     ctx.fill();
+     }
+  borderLeft(thickness){
+     ctx.beginPath();
+     ctx.fillStyle="rgba(0,0,0,0.2)";
+     ctx.moveTo(this.x*this.sparse,this.y*this.sparse);
+     ctx.lineTo(this.x*this.sparse+thickness,this.y*this.sparse+thickness);
+     ctx.lineTo(this.x*this.sparse+thickness,this.y*this.sparse+this.sparse-thickness);
+     ctx.lineTo(this.x*this.sparse,this.y*this.sparse+this.sparse);
+     ctx.closePath();
+     ctx.fill();
+     }
+   borderRight(thickness){
+     ctx.beginPath();  
+     ctx.fillStyle="rgba(0,0,0,0.6)";
+     ctx.moveTo(this.x*this.sparse+this.sparse,this.y*this.sparse);
+     ctx.lineTo(this.x*this.sparse+this.sparse-thickness,this.y*this.sparse+thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse-thickness,this.y*this.sparse+this.sparse-thickness);
+     ctx.lineTo(this.x*this.sparse+this.sparse,this.y*this.sparse+this.sparse);
+     ctx.closePath();
+     ctx.fill();
+     }
+  }
+</script>
+</body>
+</html>
